@@ -18,32 +18,28 @@ module.exports = async (event) => {
     Key: 'images.json'
   }
 
+  let newEntry = {
+    fileName,
+    fileSize,
+    type: 'image'
+  }
+
   let imageArray = [];
 
   try {
     const manifest = await s3Client.send(new GetObjectCommand(getImageManifest));
     imageArray = JSON.parse(manifest.Body);
-    console.log(imageArray);
-
+    imageArray.push(newEntry);
   } catch (e) {
     if (e.Code === 'NoSuchKey') {
-      imageArray = [];
+      imageArray.push(newEntry);
     }
   }
-
-  let newEntry = {
-    name: fileName,
-    size: fileSize
-  }
-
-  console.log(newEntry);
-
-  let newManifest = JSON.stringify(imageArray.push(newEntry));
 
   await s3Client.send(new PutObjectCommand({
     Bucket: bucketName,
     Key: 'images.json',
-    Body: newManifest
+    Body: JSON.stringify(imageArray)
   }))
 
   // TODO implement
